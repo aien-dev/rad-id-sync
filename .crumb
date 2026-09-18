@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "dir_path": "/home/drakestapleton/basecamp/rad-id-sync",
+  "dir_name": "rad-id-sync",
+  "description": "Radicle P2P identity sync node.",
+  "purpose": {
+    "statement": "Radicle P2P sovereign identity synchronization files and seed node connection state.",
+    "created_by": "operator",
+    "lifecycle": "permanent"
+  },
+  "above": {
+    "path": "..",
+    "canonical": "/home/drakestapleton/basecamp",
+    "name": "basecamp",
+    "role": "Parent directory context"
+  },
+  "below": [
+    {
+      "name": "Cargo.lock",
+      "item_type": "file",
+      "role": ""
+    },
+    {
+      "name": "Cargo.toml",
+      "item_type": "file",
+      "role": ""
+    },
+    {
+      "name": "src",
+      "item_type": "dir",
+      "role": ""
+    },
+    {
+      "name": "target",
+      "item_type": "dir",
+      "role": ""
+    }
+  ],
+  "history": [
+    {
+      "crumb_id": "crumb-1789739085115066624",
+      "timestamp": "2026-09-18T13:44:45.114846+00:00",
+      "agent_id": "Atlas-Prime",
+      "session_id": "seed-knowledge-init",
+      "action": "seed:knowledge",
+      "target": "rad-id-sync",
+      "intent": "Contextual Knowledge Grounding",
+      "vector": "Radicle P2P sovereign identity synchronization files and seed node connection st"
+    },
+    {
+      "crumb_id": "crumb-1789739202162581248",
+      "timestamp": "2026-09-18T13:46:42.162459+00:00",
+      "agent_id": "Atlas-Prime",
+      "session_id": "seed-knowledge-init",
+      "action": "seed:knowledge",
+      "target": "rad-id-sync",
+      "intent": "Contextual Knowledge Grounding",
+      "vector": "Radicle P2P sovereign identity synchronization files and seed node connection st"
+    },
+    {
+      "crumb_id": "crumb-1789739243460199680",
+      "timestamp": "2026-09-18T13:47:23.460086+00:00",
+      "agent_id": "Atlas-Prime",
+      "session_id": "seed-knowledge-init",
+      "action": "seed:knowledge",
+      "target": "rad-id-sync",
+      "intent": "Contextual Knowledge Grounding",
+      "vector": "Radicle P2P sovereign identity synchronization files and seed node connection st"
+    },
+    {
+      "crumb_id": "crumb-1789739253123191040",
+      "timestamp": "2026-09-18T13:47:33.123117+00:00",
+      "agent_id": "Atlas-Prime",
+      "session_id": "seed-knowledge-init",
+      "action": "seed:knowledge",
+      "target": "rad-id-sync",
+      "intent": "Contextual Knowledge Grounding",
+      "vector": "Radicle P2P sovereign identity synchronization files and seed node connection st"
+    },
+    {
+      "crumb_id": "crumb-1789739279842900992",
+      "timestamp": "2026-09-18T13:47:59.842855+00:00",
+      "agent_id": "Atlas-Prime",
+      "session_id": "seed-knowledge-init",
+      "action": "seed:knowledge",
+      "target": "rad-id-sync",
+      "intent": "Contextual Knowledge Grounding",
+      "vector": "Radicle P2P sovereign identity synchronization files and seed node connection st"
+    },
+    {
+      "crumb_id": "crumb-1789739322414421504",
+      "timestamp": "2026-09-18T13:48:42.414114+00:00",
+      "agent_id": "Atlas-Prime",
+      "session_id": "seed-knowledge-init",
+      "action": "seed:knowledge",
+      "target": "rad-id-sync",
+      "intent": "Contextual Knowledge Grounding",
+      "vector": "Radicle P2P sovereign identity synchronization files and seed node connection st"
+    },
+    {
+      "crumb_id": "crumb-1789739368940520960",
+      "timestamp": "2026-09-18T13:49:28.939928+00:00",
+      "agent_id": "Atlas-Prime",
+      "session_id": "seed-knowledge-init",
+      "action": "seed:knowledge",
+      "target": "rad-id-sync",
+      "intent": "Contextual Knowledge Grounding",
+      "vector": "Radicle P2P sovereign identity synchronization files and seed node connection st"
+    }
+  ],
+  "whispers": [
+    {
+      "from_agent": "Atlas-Prime",
+      "timestamp": "2026-09-18T13:44:45.114846+00:00",
+      "target_file": null,
+      "message": "did:rad:aien:spark-master identity credentials and sovereign sync endpoints."
+    }
+  ]
+}

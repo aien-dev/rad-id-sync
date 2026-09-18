@@ -1,0 +1,135 @@
+use crate::identity::{IdentityAnchor, KeyRecord};
+use sha2::{Digest, Sha256};
+use std::fs;
+use std::path::PathBuf;
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct SyncReport {
+    pub anchor_did: String,
+    pub entity_name: String,
+    pub radicle_key_detected: Option<String>,
+    pub ssh_key_detected: Option<String>,
+    pub in_sync: bool,
+    pub rotated: bool,
+    pub message: String,
+}
+
+pub fn get_sha256_fingerprint(key_str: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(key_str.trim().as_bytes());
+    hex::encode(hasher.finalize())
+}
+
+pub fn discover_local_keys() -> (Option<String>, Option<String>) {
+    let home = std::env::var("HOME").unwrap_or_else(|_| "/home/drakestapleton".to_string());
+    
+    // 1. Radicle Key
+    let rad_pub_path = PathBuf::from(&home).join(".radicle").join("keys").join("radicle.pub");
+    let rad_key = if rad_pub_path.exists() {
+        fs::read_to_string(rad_pub_path).ok().map(|s| s.trim().to_string())
+    } else {
+        None
+    };
+
+    // 2. SSH Key
+    let ssh_pub_path = PathBuf::from(&home).join(".ssh").join("id_ed25519.pub");
+    let ssh_key = if ssh_pub_path.exists() {
+        fs::read_to_string(ssh_pub_path).ok().map(|s| s.trim().to_string())
+    } else {
+        None
+    };
+
+    (rad_key, ssh_key)
+}
+
+pub fn sync_identity_keys(mut anchor: IdentityAnchor) -> Result<(IdentityAnchor, SyncReport), String> {
+    let (rad_key, ssh_key) = discover_local_keys();
+    let mut rotated = false;
+    let mut message = "Keys are already synchronized with Identity Anchor.".to_string();
+
+    let now = chrono::Utc::now().to_rfc3339();
+
+    // Check Radicle Key sync
+    if let Some(ref r_key) = rad_key {
+        if anchor.primary_radicle_key.as_ref() != Some(r_key) {
+            if anchor.primary_radicle_key.is_some() {
+                rotated = true;
+                message = "Detected rotated Radicle public key; updated Identity Anchor.".to_string();
+            }
+            anchor.primary_radicle_key = Some(r_key.clone());
+            anchor.key_history.push(KeyRecord {
+                key_type: "radicle-ed25519".to_string(),
+                public_key: r_key.clone(),
+                finger_print: get_sha256_fingerprint(r_key),
+                added_at: now.clone(),
+                status: "active".to_string(),
+            });
+        }
+    }
+
+    // Check SSH Key sync
+    if let Some(ref s_key) = ssh_key {
+        if anchor.primary_ssh_key.as_ref() != Some(s_key) {
+            if anchor.primary_ssh_key.is_some() {
+                rotated = true;
+                message = "Detected updated SSH public key; updated Identity Anchor.".to_string();
+            }
+            anchor.primary_ssh_key = Some(s_key.clone());
+            anchor.key_history.push(KeyRecord {
+                key_type: "ssh-ed25519".to_string(),
+                public_key: s_key.clone(),
+                finger_print: get_sha256_fingerprint(s_key),
+                added_at: now.clone(),
+                status: "active".to_string(),
+            });
+        }
+    }
+
+    anchor.last_synced_at = now;
+    anchor.save()?;
+
+    let in_sync = anchor.primary_ssh_key.is_some() || anchor.primary_radicle_key.is_some();
+
+    let report = SyncReport {
+        anchor_did: anchor.did.clone(),
+        entity_name: anchor.name.clone(),
+        radicle_key_detected: rad_key,
+        ssh_key_detected: ssh_key,
+        in_sync,
+        rotated,
+        message,
+    };
+
+    Ok((anchor, report))
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sha256_fingerprint_deterministic() {
+        let sample = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExamplePublicKey user@host";
+        let fp1 = get_sha256_fingerprint(sample);
+        let fp2 = get_sha256_fingerprint(sample);
+        assert_eq!(fp1, fp2);
+        assert_eq!(fp1.len(), 64);
+    }
+
+    #[test]
+    fn test_sync_report_serialization() {
+        let report = SyncReport {
+            anchor_did: "did:rad:aien:spark-01".to_string(),
+            entity_name: "AIEN".to_string(),
+            radicle_key_detected: Some("ssh-ed25519 AAAAC...".to_string()),
+            ssh_key_detected: Some("ssh-ed25519 AAAAC...".to_string()),
+            in_sync: true,
+            rotated: false,
+            message: "All keys synchronized.".to_string(),
+        };
+        let json = serde_json::to_string(&report).expect("serializable");
+        assert!(json.contains("did:rad:aien:spark-01"));
+        assert!(json.contains("All keys synchronized."));
+    }
+}
