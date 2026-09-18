@@ -20,6 +20,38 @@ pub fn get_sha256_fingerprint(key_str: &str) -> String {
     hex::encode(hasher.finalize())
 }
 
+/// Validate format of detected public keys.
+pub fn validate_public_key_format(key_type: &str, key_str: &str) -> Result<(), String> {
+    let trimmed = key_str.trim();
+    if trimmed.is_empty() {
+        return Err("Public key is empty".to_string());
+    }
+
+    match key_type {
+        "ssh-ed25519" => {
+            if !trimmed.starts_with("ssh-ed25519 ") {
+                return Err("Invalid SSH Ed25519 key format: expected prefix ssh-ed25519".to_string());
+            }
+            let parts: Vec<&str> = trimmed.split_whitespace().collect();
+            if parts.len() < 2 {
+                return Err("Malformed SSH key: missing base64 token payload".to_string());
+            }
+            if parts[1].len() < 32 {
+                return Err("SSH key payload too short for Ed25519 public key".to_string());
+            }
+            Ok(())
+        }
+        "radicle-ed25519" => {
+            if trimmed.starts_with("ssh-ed25519 ") || trimmed.starts_with("rad:") || trimmed.len() >= 32 {
+                Ok(())
+            } else {
+                Err("Invalid Radicle public key length or format".to_string())
+            }
+        }
+        _ => Ok(()),
+    }
+}
+
 pub fn discover_local_keys() -> (Option<String>, Option<String>) {
     let home = std::env::var("HOME").unwrap_or_else(|_| "/home/drakestapleton".to_string());
     
@@ -51,6 +83,7 @@ pub fn sync_identity_keys(mut anchor: IdentityAnchor) -> Result<(IdentityAnchor,
 
     // Check Radicle Key sync
     if let Some(ref r_key) = rad_key {
+        validate_public_key_format("radicle-ed25519", r_key)?;
         if anchor.primary_radicle_key.as_ref() != Some(r_key) {
             if anchor.primary_radicle_key.is_some() {
                 rotated = true;
@@ -69,6 +102,7 @@ pub fn sync_identity_keys(mut anchor: IdentityAnchor) -> Result<(IdentityAnchor,
 
     // Check SSH Key sync
     if let Some(ref s_key) = ssh_key {
+        validate_public_key_format("ssh-ed25519", s_key)?;
         if anchor.primary_ssh_key.as_ref() != Some(s_key) {
             if anchor.primary_ssh_key.is_some() {
                 rotated = true;
@@ -103,7 +137,6 @@ pub fn sync_identity_keys(mut anchor: IdentityAnchor) -> Result<(IdentityAnchor,
     Ok((anchor, report))
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -131,5 +164,14 @@ mod tests {
         let json = serde_json::to_string(&report).expect("serializable");
         assert!(json.contains("did:rad:aien:spark-01"));
         assert!(json.contains("All keys synchronized."));
+    }
+
+    #[test]
+    fn test_validate_public_key_format() {
+        assert!(validate_public_key_format("ssh-ed25519", "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleValidPayloadKey user@host").is_ok());
+        assert!(validate_public_key_format("ssh-ed25519", "rsa-bad AAAAC3").is_err());
+        assert!(validate_public_key_format("ssh-ed25519", "ssh-ed25519 short").is_err());
+        assert!(validate_public_key_format("radicle-ed25519", "rad:z6MkuTf9Vd6F4sM6eS2y5fV9tF3p").is_ok());
+        assert!(validate_public_key_format("radicle-ed25519", "").is_err());
     }
 }
