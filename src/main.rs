@@ -19,8 +19,14 @@ fn main() {
             println!("DID:         {}", anchor.did);
             println!("Name:        {}", anchor.name);
             println!("Type:        {:?}", anchor.entity_type);
-            println!("Radicle Key: {}", anchor.primary_radicle_key.as_deref().unwrap_or("<none>"));
-            println!("SSH Key:     {}", anchor.primary_ssh_key.as_deref().unwrap_or("<none>"));
+            println!(
+                "Radicle Key: {}",
+                anchor.primary_radicle_key.as_deref().unwrap_or("<none>")
+            );
+            println!(
+                "SSH Key:     {}",
+                anchor.primary_ssh_key.as_deref().unwrap_or("<none>")
+            );
             println!("Last Synced: {}", anchor.last_synced_at);
             println!("Key History: {} records", anchor.key_history.len());
         }

@@ -16,13 +16,13 @@ pub struct KeyRecord {
     pub public_key: String,
     pub finger_print: String,
     pub added_at: String,
-    pub status: String,   // "active", "rotated", "revoked"
+    pub status: String, // "active", "rotated", "revoked"
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IdentityAnchor {
-    pub did: String,                       // e.g. "did:rad:aien:spark-01"
-    pub name: String,                      // "AIEN" or "Drake Stapleton"
+    pub did: String,  // e.g. "did:rad:aien:spark-01"
+    pub name: String, // "AIEN" or "Drake Stapleton"
     pub entity_type: EntityType,
     pub primary_radicle_key: Option<String>,
     pub primary_ssh_key: Option<String>,
@@ -53,13 +53,16 @@ impl IdentityAnchor {
         let home = std::env::var("HOME")
             .or_else(|_| std::env::var("USERPROFILE"))
             .unwrap_or_else(|_| ".".to_string());
-        PathBuf::from(home).join(".radicle").join("identity_anchor.json")
+        PathBuf::from(home)
+            .join(".radicle")
+            .join("identity_anchor.json")
     }
 
     pub fn load_or_init() -> Result<Self, String> {
         let path = Self::anchor_file_path();
         if path.exists() {
-            let data = fs::read_to_string(&path).map_err(|e| format!("Failed to read anchor: {}", e))?;
+            let data =
+                fs::read_to_string(&path).map_err(|e| format!("Failed to read anchor: {}", e))?;
             serde_json::from_str(&data).map_err(|e| format!("Failed to parse anchor: {}", e))
         } else {
             let anchor = Self::default_agent();
@@ -71,9 +74,11 @@ impl IdentityAnchor {
     pub fn save(&self) -> Result<(), String> {
         let path = Self::anchor_file_path();
         if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent).map_err(|e| format!("Failed to create parent dir: {}", e))?;
+            fs::create_dir_all(parent)
+                .map_err(|e| format!("Failed to create parent dir: {}", e))?;
         }
-        let data = serde_json::to_string_pretty(self).map_err(|e| format!("Failed to serialize: {}", e))?;
+        let data = serde_json::to_string_pretty(self)
+            .map_err(|e| format!("Failed to serialize: {}", e))?;
         fs::write(&path, data).map_err(|e| format!("Failed to write anchor: {}", e))
     }
 }

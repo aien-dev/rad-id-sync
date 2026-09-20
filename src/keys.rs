@@ -30,7 +30,9 @@ pub fn validate_public_key_format(key_type: &str, key_str: &str) -> Result<(), S
     match key_type {
         "ssh-ed25519" => {
             if !trimmed.starts_with("ssh-ed25519 ") {
-                return Err("Invalid SSH Ed25519 key format: expected prefix ssh-ed25519".to_string());
+                return Err(
+                    "Invalid SSH Ed25519 key format: expected prefix ssh-ed25519".to_string(),
+                );
             }
             let parts: Vec<&str> = trimmed.split_whitespace().collect();
             if parts.len() < 2 {
@@ -42,7 +44,10 @@ pub fn validate_public_key_format(key_type: &str, key_str: &str) -> Result<(), S
             Ok(())
         }
         "radicle-ed25519" => {
-            if trimmed.starts_with("ssh-ed25519 ") || trimmed.starts_with("rad:") || trimmed.len() >= 32 {
+            if trimmed.starts_with("ssh-ed25519 ")
+                || trimmed.starts_with("rad:")
+                || trimmed.len() >= 32
+            {
                 Ok(())
             } else {
                 Err("Invalid Radicle public key length or format".to_string())
@@ -56,11 +61,16 @@ pub fn discover_local_keys() -> (Option<String>, Option<String>) {
     let home = std::env::var("HOME")
         .or_else(|_| std::env::var("USERPROFILE"))
         .unwrap_or_else(|_| ".".to_string());
-    
+
     // 1. Radicle Key
-    let rad_pub_path = PathBuf::from(&home).join(".radicle").join("keys").join("radicle.pub");
+    let rad_pub_path = PathBuf::from(&home)
+        .join(".radicle")
+        .join("keys")
+        .join("radicle.pub");
     let rad_key = if rad_pub_path.exists() {
-        fs::read_to_string(rad_pub_path).ok().map(|s| s.trim().to_string())
+        fs::read_to_string(rad_pub_path)
+            .ok()
+            .map(|s| s.trim().to_string())
     } else {
         None
     };
@@ -68,7 +78,9 @@ pub fn discover_local_keys() -> (Option<String>, Option<String>) {
     // 2. SSH Key
     let ssh_pub_path = PathBuf::from(&home).join(".ssh").join("id_ed25519.pub");
     let ssh_key = if ssh_pub_path.exists() {
-        fs::read_to_string(ssh_pub_path).ok().map(|s| s.trim().to_string())
+        fs::read_to_string(ssh_pub_path)
+            .ok()
+            .map(|s| s.trim().to_string())
     } else {
         None
     };
@@ -76,7 +88,9 @@ pub fn discover_local_keys() -> (Option<String>, Option<String>) {
     (rad_key, ssh_key)
 }
 
-pub fn sync_identity_keys(mut anchor: IdentityAnchor) -> Result<(IdentityAnchor, SyncReport), String> {
+pub fn sync_identity_keys(
+    mut anchor: IdentityAnchor,
+) -> Result<(IdentityAnchor, SyncReport), String> {
     let (rad_key, ssh_key) = discover_local_keys();
     let mut rotated = false;
     let mut message = "Keys are already synchronized with Identity Anchor.".to_string();
@@ -89,7 +103,8 @@ pub fn sync_identity_keys(mut anchor: IdentityAnchor) -> Result<(IdentityAnchor,
         if anchor.primary_radicle_key.as_ref() != Some(r_key) {
             if anchor.primary_radicle_key.is_some() {
                 rotated = true;
-                message = "Detected rotated Radicle public key; updated Identity Anchor.".to_string();
+                message =
+                    "Detected rotated Radicle public key; updated Identity Anchor.".to_string();
             }
             anchor.primary_radicle_key = Some(r_key.clone());
             anchor.key_history.push(KeyRecord {
@@ -170,10 +185,17 @@ mod tests {
 
     #[test]
     fn test_validate_public_key_format() {
-        assert!(validate_public_key_format("ssh-ed25519", "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleValidPayloadKey user@host").is_ok());
+        assert!(validate_public_key_format(
+            "ssh-ed25519",
+            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleValidPayloadKey user@host"
+        )
+        .is_ok());
         assert!(validate_public_key_format("ssh-ed25519", "rsa-bad AAAAC3").is_err());
         assert!(validate_public_key_format("ssh-ed25519", "ssh-ed25519 short").is_err());
-        assert!(validate_public_key_format("radicle-ed25519", "rad:z6MkuTf9Vd6F4sM6eS2y5fV9tF3p").is_ok());
+        assert!(
+            validate_public_key_format("radicle-ed25519", "rad:z6MkuTf9Vd6F4sM6eS2y5fV9tF3p")
+                .is_ok()
+        );
         assert!(validate_public_key_format("radicle-ed25519", "").is_err());
     }
 }
